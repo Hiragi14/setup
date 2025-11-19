@@ -11,3 +11,6 @@ wheels/
 
 # token
 *.hf_token
+
+# Archive files
+*.tar.gz
