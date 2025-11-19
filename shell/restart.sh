@@ -26,6 +26,13 @@ chmod +x /workspace/setup/shell/write_rc.sh
 /workspace/setup/shell/write_rc.sh vimrc
 echo "🎉 Configuration files have been set up."
 
+# uvのインストール
+echo "🚀 Installing uv..."
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
+echo "🎉 uv installation complete."
+
+
 # Hugging Face CLIのインストール
 echo "🚀 Installing Hugging Face CLI..."
 pip install --upgrade pip
@@ -37,7 +44,8 @@ echo "🚀 Authenticating Hugging Face CLI..."
 source ~/.bashrc
 FILE_NAME="/workspace/setup/download/.hf_token"
 HUGGINGFACE_TOKEN=$(cat $FILE_NAME)
-huggingface-cli login --token $HUGGINGFACE_TOKEN
+hf auth login --token $HUGGINGFACE_TOKEN --add-to-git-credential
+echo 'export HF_TOKEN=$HUGGINGFACE_TOKEN' >> ~/.bashrc
 echo "🎉 Hugging Face CLI authenticated."
 
 # ディレクトリの作成
