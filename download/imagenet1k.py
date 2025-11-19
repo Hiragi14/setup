@@ -5,22 +5,33 @@
 import shutil
 import subprocess
 import sys
+import os
 import tarfile
 import urllib.request
+import logging
 from logging import getLogger
 from pathlib import Path
 from typing import List
 
-from huggingface_hub import HfFolder, hf_hub_download, snapshot_download
+from huggingface_hub import hf_hub_download, snapshot_download
 from scipy.io import loadmat
 from tqdm import tqdm
 
+import typer
+
 # --- 定数 ---
 HF_USER = "Hiragi14"
-HF_TOKEN = HfFolder.get_token()
-BASE_DATASET_DIR = Path("dataset")
+HF_TOKEN = os.getenv("HF_TOKEN" or "")
+BASE_DATASET_DIR = Path("../dataset")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="\033[31m [%(levelname)s]\033[0m [%(asctime)s] [%(process)d]: [%(filename)s:%(lineno)s] %(funcName)s : %(message)s",
+    stream=sys.stdout,
+)
 
 log = getLogger(__name__)
+app = typer.Typer()
 
 
 def run_command(command: List[str]):
@@ -219,6 +230,7 @@ def _download_and_process_imagenet_devkit(dest_dir: Path) -> None:
     log.info("DevKitの処理が完了しました。")
 
 
+@app.command()
 def download_imagenet() -> None:
     """ImageNet-1kデータセット全体をダウンロードし、整理する。"""
     log.info("ImageNet-1kデータセットのダウンロードと整理を開始します...")
@@ -269,3 +281,7 @@ def download_from_hf(dataset_name: str) -> None:
         log.warning(f"展開対象のアーカイブが見つかりませんでした: {archive_path}")
 
     log.info(f"{dataset_name} データセットのダウンロードが完了しました。")
+
+
+if __name__ == "__main__":
+    app()
