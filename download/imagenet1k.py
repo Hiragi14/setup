@@ -20,7 +20,6 @@ from tqdm import tqdm
 import typer
 
 # --- 定数 ---
-HF_USER = "Hiragi14"
 HF_TOKEN = os.getenv("HF_TOKEN" or "")
 BASE_DATASET_DIR = Path("../dataset")
 
@@ -249,38 +248,6 @@ def download_imagenet() -> None:
     _download_and_process_imagenet_devkit(dest_dir)
     organize_imagenet_validation_data(dest_dir)
     log.info("ImageNet-1kデータセットのダウンロードと整理が完了しました。")
-
-
-def download_from_hf(dataset_name: str) -> None:
-    """指定されたデータセットをHugging Face Hubからダウンロードし、展開する。
-
-    Args:
-        dataset_name: ダウンロードするデータセットの名前。
-    """
-    log.info(f"{dataset_name} データセットをHugging Face Hubからダウンロードします...")
-    repo_id = f"{HF_USER}/{dataset_name}"
-    local_dir = BASE_DATASET_DIR / dataset_name
-
-    try:
-        snapshot_download(
-            repo_id=repo_id,
-            repo_type="dataset",
-            local_dir=str(local_dir),
-            token=HF_TOKEN,
-        )
-    except Exception as e:
-        log.error(f"Hugging Face Hubからのダウンロードに失敗しました: {e}")
-        return
-
-    archive_path = local_dir / f"{dataset_name}.tar.gz"
-    if archive_path.exists():
-        _extract_tar(archive_path, BASE_DATASET_DIR, use_pigz=True)
-        archive_path.unlink()
-        log.info(f"一時アーカイブを削除しました: {archive_path}")
-    else:
-        log.warning(f"展開対象のアーカイブが見つかりませんでした: {archive_path}")
-
-    log.info(f"{dataset_name} データセットのダウンロードが完了しました。")
 
 
 if __name__ == "__main__":
