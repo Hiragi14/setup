@@ -32,17 +32,24 @@ echo "🚀 Installing uv..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
 echo "🎉 uv installation complete."
 
+# エラー時にスクリプトを終了しないように設定変更
+set +e
+
 # Hugging Face CLIのインストール
 echo "🚀 Installing Hugging Face CLI..."
 pip install huggingface_hub hf_transfer
 echo "🎉 Hugging Face CLI installation complete."
+
+# git-credentialの設定
+echo "🚀 Configuring git credential helper..."
+git config --global credential.helper store
+echo "🎉 git credential helper configured."
 
 # Hugging Faceの認証
 echo "🚀 Authenticating Hugging Face CLI..."
 source ~/.bashrc
 FILE_NAME="/workspace/setup/download/.hf_token"
 HUGGINGFACE_TOKEN=$(cat $FILE_NAME)
-# huggingface-cli login --token $HUGGINGFACE_TOKEN
 hf auth login --token $HUGGINGFACE_TOKEN --add-to-git-credential
 echo 'export HF_TOKEN=$HUGGINGFACE_TOKEN' >> ~/.bashrc
 echo "🎉 Hugging Face CLI authenticated."
