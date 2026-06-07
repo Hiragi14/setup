@@ -27,3 +27,11 @@ echo "export HF_TOKEN=${HF_TOKEN}" >> ~/.bashrc
 echo "🎉 HF_TOKEN is ready to use."
 
 screen -S download_imagenet1k -dm python /workspace/setup/download/imagenet1k.py
+
+# すでに環境変数 DISCORD_TOKEN がある場合
+if [ -n "$DISCORD_TOKEN" ]; then
+    echo "✅ Environment variable DISCORD_TOKEN is already set."
+    echo "DISCORD_TOKEN=${DISCORD_TOKEN}"
+    uv run /workspace/setup/download/notify.py notice -t "ImageNet-1K Download Started" -w "${DISCORD_TOKEN}"
+else
+    echo "⚠️ Environment variable DISCORD_TOKEN not found."

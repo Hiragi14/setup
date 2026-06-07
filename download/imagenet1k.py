@@ -2,22 +2,25 @@
 データセットのダウンロード、展開、およびその他の共通ユーティリティ関数を提供するヘルパーモジュール。
 """
 
+import json
+import logging
+import os
 import shutil
+import socket
 import subprocess
 import sys
-import os
 import tarfile
 import urllib.request
-import logging
+from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from typing import List
 
-from huggingface_hub import hf_hub_download, snapshot_download
+import requests
+import typer
+from huggingface_hub import hf_hub_download
 from scipy.io import loadmat
 from tqdm import tqdm
-
-import typer
 
 # --- 定数 ---
 HF_TOKEN = os.getenv("HF_TOKEN" or "")
@@ -31,6 +34,61 @@ logging.basicConfig(
 
 log = getLogger(__name__)
 app = typer.Typer()
+
+
+class DiscordWebhook:
+    """DiscordのWebhook URLとチャンネルを指定して、メッセージを送信するクラス"""
+
+    def __init__(self, url: str):
+        """DiscordのWebhook URLとチャンネルを指定して初期化する。
+
+        Args:
+            url (str): DiscordのWebhook URL
+            channel (str): メッセージを送信するDiscordのチャンネル名（例: "#general"）
+        """
+        self.url = url
+
+        self.hostname = socket.gethostname()
+        self.icon_emoji = ":desktop_computer:"
+        self.current_time = datetime.now().strftime("%Y/%m/%d-%H時%M分")
+
+    def send(self, title: str, message: str, footer: bool = True) -> None:
+        """Discordにメッセージを送信する。
+
+        Args:
+            title (str): メッセージのタイトル
+            message (str): メッセージの内容
+            footer (bool): フッターを表示するかどうか
+        """
+        footer_data = (
+            {}
+            if not footer
+            else {
+                "text": self.current_time,
+                "icon_url": "https://cdn.discordapp.com/embed/avatars/2.png",
+            }
+        )
+        payload = {
+            "username": str(self.hostname),
+            "embeds": [
+                {
+                    "title": title,
+                    "description": message,
+                    "color": 0x00FF00,
+                    "footer": footer_data,
+                }
+            ],
+        }
+        response = requests.post(
+            self.url,
+            data=json.dumps(payload),
+            headers={"Content-Type": "application/json"},
+        )
+        # エラーが出たらプリント
+        if response.status_code == 204:
+            log.info("メッセージを送信しました")
+        else:
+            log.error(f"エラーが発生しました: {response.status_code}")
 
 
 def run_command(command: List[str]):
@@ -248,6 +306,14 @@ def download_imagenet() -> None:
     _download_and_process_imagenet_devkit(dest_dir)
     organize_imagenet_validation_data(dest_dir)
     log.info("ImageNet-1kデータセットのダウンロードと整理が完了しました。")
+
+    DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+    if DISCORD_TOKEN:
+        discord_webhook = DiscordWebhook(DISCORD_TOKEN)
+        discord_webhook.send(
+            title="ImageNet-1K Download Completed",
+            message="ImageNet-1Kデータセットのダウンロードと整理が完了しました。",
+        )
 
 
 if __name__ == "__main__":
